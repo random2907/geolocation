@@ -8,33 +8,59 @@ void main() {
   runApp(const Myapp());
 }
 
-class Myapp extends StatelessWidget {
+class Myapp extends StatefulWidget {
   const Myapp({super.key});
+  @override
+  MyappState createState() => MyappState();
+}
+
+class MyappState extends State<Myapp> {
+  bool home = false;
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: "Hello world",
-      home: const Homepage(),
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.blue,
-        ),
         useMaterial3: true,
-      ).copyWith(
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Colors.blue,
-        ),
       ),
-      darkTheme: ThemeData.from(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.blueGrey,
-        ),
-      ).copyWith(
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Colors.blueGrey,
-        ),
-      ),
+      darkTheme: ThemeData.dark(),
       themeMode: ThemeMode.system,
+      home: home ? const Homepage() : const Login(),
+    );
+  }
+}
+
+class CommonDrawer extends StatelessWidget {
+  const CommonDrawer({super.key});
+  @override
+  Widget build(BuildContext context) {
+    return Drawer(
+      child: ListView(
+        children: [
+          const SizedBox(
+            height: 50,
+            child: DrawerHeader(
+              padding: EdgeInsets.only(left: 100),
+              child:
+                  Text("Menu", style: TextStyle(fontWeight: FontWeight.bold)),
+            ),
+          ),
+          ListTile(
+            title: const Text("Login"),
+            onTap: () {
+              Navigator.push(context,
+                  MaterialPageRoute(builder: (context) => const Login()));
+            },
+          ),
+          ListTile(
+            title: const Text("Home"),
+            onTap: () {
+              Navigator.push(context,
+                  MaterialPageRoute(builder: (context) => const Homepage()));
+            },
+          ),
+        ],
+      ),
     );
   }
 }
@@ -116,6 +142,7 @@ class HomepageState extends State<Homepage> {
         title: const Text("Attendence"),
         centerTitle: true,
       ),
+      drawer: const CommonDrawer(),
       body: position == null
           ? Center(
               child: Text(_locationMessage.isEmpty
@@ -163,6 +190,40 @@ class HomepageState extends State<Homepage> {
                 ),
               ],
             ),
+    );
+  }
+}
+
+class Login extends StatefulWidget {
+  const Login({super.key});
+  @override
+  LoginState createState() => LoginState();
+}
+
+class LoginState extends State<Login> {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        leading: Builder(
+          builder: (context) => IconButton(
+            onPressed: () {
+              Scaffold.of(context).openDrawer();
+            },
+            icon: const Icon(Icons.menu),
+          ),
+        ),
+      ),
+      drawer: const CommonDrawer(),
+      body: const Padding(
+        padding: EdgeInsets.only(top: 100, left: 18, right: 18),
+        child: TextField(
+          textAlign: TextAlign.center,
+          decoration: InputDecoration(
+            labelText: "Enter your name",
+          ),
+        ),
+      ),
     );
   }
 }
