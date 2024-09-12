@@ -3,8 +3,12 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
 import 'package:latlong2/latlong.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
   runApp(const Myapp());
 }
 
@@ -16,6 +20,19 @@ class Myapp extends StatefulWidget {
 
 class MyappState extends State<Myapp> {
   bool home = false;
+
+  @override
+  void initState(){
+          super.initState();
+          FirebaseAuth.instance.authStateChanges().listen((User?user){
+                  if (user != null) {
+                          setState((){
+                                  home = true;
+                          });
+                  }
+          });
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -46,17 +63,17 @@ class CommonDrawer extends StatelessWidget {
             ),
           ),
           ListTile(
-            title: const Text("Login"),
-            onTap: () {
-              Navigator.push(context,
-                  MaterialPageRoute(builder: (context) => const Login()));
-            },
-          ),
-          ListTile(
             title: const Text("Home"),
             onTap: () {
               Navigator.push(context,
                   MaterialPageRoute(builder: (context) => const Homepage()));
+            },
+          ),
+          ListTile(
+            title: const Text("Logout"),
+            onTap: () {
+                    FirebaseAuth.instance.signOut();
+                    Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const Login()));
             },
           ),
         ],
@@ -201,29 +218,84 @@ class Login extends StatefulWidget {
 }
 
 class LoginState extends State<Login> {
+  final emailAddress = TextEditingController();
+  final password = TextEditingController();
+  Future<void> _signin() async {
+    try {
+      await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: emailAddress.text,
+        password: password.text,
+      );
+      Navigator.pushReplacement(
+          context, MaterialPageRoute(builder: (context) => const Homepage()));
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'user-not-found') {
+        print('No user found for that email.');
+      } else if (e.code == 'wrong-password') {
+        print('Wrong password provided for that user.');
+      }
+    }
+  }
+
+  Future<void> _signup() async {
+    print(emailAddress.text);
+    try {
+      FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: emailAddress.text,
+        password: password.text,
+      );
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'weak-password') {
+        print('The password provided is too weak.');
+      } else if (e.code == 'email-already-in-use') {
+        print('The account already exists for that email.');
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        leading: Builder(
-          builder: (context) => IconButton(
+      body: Column(children: <Widget>[
+        Padding(
+          padding: const EdgeInsets.only(top: 50, left: 18, right: 18),
+          child: TextField(
+            textAlign: TextAlign.center,
+            controller: emailAddress,
+            decoration: const InputDecoration(
+              labelText: "emailAddress",
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.only(top: 50, left: 18, right: 18),
+          child: TextField(
+            textAlign: TextAlign.center,
+            controller: password,
+            decoration: const InputDecoration(
+              labelText: "password",
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.all(0.0),
+          child: ElevatedButton(
             onPressed: () {
-              Scaffold.of(context).openDrawer();
+              _signin();
             },
-            icon: const Icon(Icons.menu),
+            child: const Text("Sign in"),
           ),
         ),
-      ),
-      drawer: const CommonDrawer(),
-      body: const Padding(
-        padding: EdgeInsets.only(top: 100, left: 18, right: 18),
-        child: TextField(
-          textAlign: TextAlign.center,
-          decoration: InputDecoration(
-            labelText: "Enter your name",
+        Padding(
+          padding: const EdgeInsets.all(0.0),
+          child: ElevatedButton(
+            onPressed: () {
+              _signup();
+            },
+            child: const Text("Sign up"),
           ),
         ),
-      ),
+      ]),
     );
   }
 }
