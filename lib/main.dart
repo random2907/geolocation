@@ -24,13 +24,9 @@ class MyappState extends State<Myapp> {
   @override
   void initState(){
           super.initState();
-          FirebaseAuth.instance.authStateChanges().listen((User?user){
-                  if (user != null) {
-                          setState((){
-                                  home = true;
-                          });
-                  }
-          });
+          if (FirebaseAuth.instance.currentUser!=null){
+                  home = true;
+          }
   }
 
   @override
@@ -240,7 +236,7 @@ class LoginState extends State<Login> {
   Future<void> _signup() async {
     print(emailAddress.text);
     try {
-      FirebaseAuth.instance.createUserWithEmailAndPassword(
+      await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: emailAddress.text,
         password: password.text,
       );
