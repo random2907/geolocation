@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:http/http.dart' as http;
 import 'package:latlong2/latlong.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -22,11 +21,11 @@ class MyappState extends State<Myapp> {
   bool home = false;
 
   @override
-  void initState(){
-          super.initState();
-          if (FirebaseAuth.instance.currentUser!=null){
-                  home = true;
-          }
+  void initState() {
+    super.initState();
+    if (FirebaseAuth.instance.currentUser != null) {
+      home = true;
+    }
   }
 
   @override
@@ -68,8 +67,9 @@ class CommonDrawer extends StatelessWidget {
           ListTile(
             title: const Text("Logout"),
             onTap: () {
-                    FirebaseAuth.instance.signOut();
-                    Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const Login()));
+              FirebaseAuth.instance.signOut();
+              Navigator.pushReplacement(context,
+                  MaterialPageRoute(builder: (context) => const Login()));
             },
           ),
         ],
@@ -85,41 +85,33 @@ class Homepage extends StatefulWidget {
 }
 
 class HomepageState extends State<Homepage> {
-  Position? position;
   String _locationMessage = "";
+  final _mapcontroller = MapController();
+  Position? position;
 
   @override
   void initState() {
     super.initState();
-    _initializeLocation();
   }
 
   Future<void> _initializeLocation() async {
-    await _checkGps();
-    await _getLocationAndSend();
-  }
+    bool serviceEnabled;
+    LocationPermission permission;
 
-  Future<void> _checkGps() async {
-    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
-      LocationPermission locationPermission =
-          await Geolocator.requestPermission();
-      if (locationPermission == LocationPermission.denied) {
-        setState(() {
-          _locationMessage = "Location services are disabled.";
-        });
-        return;
-      }
+      setState(() {
+        _locationMessage =
+            "Location services are disabled. Please enable them.";
+      });
     }
-  }
 
-  Future<void> _getLocationAndSend() async {
-    LocationPermission permission = await Geolocator.checkPermission();
+    permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
       if (permission == LocationPermission.denied) {
         setState(() {
-          _locationMessage = "Location permissions are denied.";
+          _locationMessage = "Location permissions are denied";
         });
         return;
       }
@@ -127,23 +119,19 @@ class HomepageState extends State<Homepage> {
 
     if (permission == LocationPermission.deniedForever) {
       setState(() {
-        _locationMessage = "Location permissions are permanently denied.";
+        _locationMessage = "Location permissions are permanently denied";
       });
       return;
     }
 
-    // Get the current position
-    position = await Geolocator.getCurrentPosition();
+    Position newposition = await Geolocator.getCurrentPosition();
     setState(() {
-      _locationMessage =
-          "Location fetched: ${position!.latitude}, ${position!.longitude}";
+      position = newposition;
     });
-
-    String url = 'http://192.168.0.108:8080/';
-    await http.post(Uri.parse(url), body: {
-      'latitude': position!.latitude.toString(),
-      'longitude': position!.longitude.toString(),
-    });
+      if (position != null) {
+        _mapcontroller.move(
+            LatLng(position!.latitude, position!.longitude), 18);
+      }
   }
 
   var i = "Punch in";
@@ -155,54 +143,45 @@ class HomepageState extends State<Homepage> {
         title: const Text("Attendence"),
         centerTitle: true,
       ),
+      floatingActionButton: FloatingActionButton(
+      onPressed: () {
+        _initializeLocation();
+        setState(() {
+          if (i == "Punch in") {
+            i = "Punch out";
+          } else {
+            i = "Punch in";
+          }
+        });
+      },
+      child: Text(i),
+      ),
       drawer: const CommonDrawer(),
       body: position == null
-          ? Center(
-              child: Text(_locationMessage.isEmpty
-                  ? "Fetching location..."
-                  : _locationMessage))
-          : FlutterMap(
-              options: MapOptions(
-                initialCenter: LatLng(position!.latitude, position!.longitude),
-                initialZoom: 18,
+      ? Text(_locationMessage.isEmpty ? "Fetching location..." : _locationMessage)
+      : FlutterMap(
+        mapController: _mapcontroller,
+        options: MapOptions(
+          initialCenter: LatLng(position!.latitude, position!.longitude),
+          initialZoom: 18,
+        ),
+        children: [
+          TileLayer(
+            urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+            userAgentPackageName: 'dev.fleaflet.flutter_map.example',
+          ),
+          MarkerLayer(
+            markers: [
+              Marker(
+                point: LatLng(position!.latitude, position!.longitude),
+                width: 80,
+                height: 80,
+                child: const Icon(Icons.location_on, color: Colors.red),
               ),
-              children: [
-                TileLayer(
-                  urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                  userAgentPackageName: 'dev.fleaflet.flutter_map.example',
-                ),
-                MarkerLayer(
-                  markers: [
-                    Marker(
-                      point: LatLng(position!.latitude, position!.longitude),
-                      width: 80,
-                      height: 80,
-                      child: const Icon(Icons.location_on, color: Colors.red),
-                    ),
-                  ],
-                ),
-                Stack(
-                  children: <Widget>[
-                    Align(
-                      alignment: AlignmentDirectional.bottomCenter,
-                      child: ElevatedButton(
-                        onPressed: () {
-                          _initializeLocation();
-                          setState(() {
-                            if (i == "Punch in") {
-                              i = "Punch out";
-                            } else {
-                              i = "Punch in";
-                            }
-                          });
-                        },
-                        child: Text(i),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }
