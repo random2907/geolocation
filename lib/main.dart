@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'home.dart';
+import 'package:geolocator/geolocator.dart';
 import 'login.dart';
+import 'permission.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -17,14 +19,28 @@ class Myapp extends StatefulWidget {
 }
 
 class MyappState extends State<Myapp> {
-  bool home = false;
+  bool isUser = false;
+  bool isPermission = false;
+  bool? permission;
+
+  Future<void> _permission() async {
+    LocationPermission permission = await Geolocator.checkPermission();
+    if (FirebaseAuth.instance.currentUser != null) {
+      isUser = true;
+    }
+    if (permission == LocationPermission.denied ||
+        permission == LocationPermission.deniedForever) {
+      isPermission = false;
+    } else {
+      isPermission = true;
+    }
+    setState((){});
+  }
 
   @override
   void initState() {
     super.initState();
-    if (FirebaseAuth.instance.currentUser != null) {
-      home = true;
-    }
+    _permission();
   }
 
   @override
@@ -36,8 +52,9 @@ class MyappState extends State<Myapp> {
       ),
       darkTheme: ThemeData.dark(),
       themeMode: ThemeMode.system,
-      home: home ? const Homepage() : const Login(),
+      home: (isUser && isPermission)
+          ? const Homepage()
+          : (isUser ? const Permission() : const Login()),
     );
   }
 }
-

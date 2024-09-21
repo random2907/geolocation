@@ -11,51 +11,18 @@ class Homepage extends StatefulWidget {
 }
 
 class HomepageState extends State<Homepage> {
-  String _locationMessage = "";
   final _mapcontroller = MapController();
   Position? position;
 
-  @override
-  void initState() {
-    super.initState();
-  }
-
-  Future<void> _initializeLocation() async {
-    bool serviceEnabled;
-    LocationPermission permission;
-
-    serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) {
-      setState(() {
-        _locationMessage =
-            "Location services are disabled. Please enable them.";
-      });
-    }
-
-    permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) {
-        setState(() {
-          _locationMessage = "Location permissions are denied";
-        });
-        return;
-      }
-    }
-
-    if (permission == LocationPermission.deniedForever) {
-      setState(() {
-        _locationMessage = "Location permissions are permanently denied";
-      });
-      return;
-    }
-
-    Position newposition = await Geolocator.getCurrentPosition();
+  Future<void> _getLocation() async {
+    Position? newposition = await Geolocator.getCurrentPosition();
     setState(() {
       position = newposition;
     });
     if (position != null) {
+            WidgetsBinding.instance.addPostFrameCallback((callback){
       _mapcontroller.move(LatLng(position!.latitude, position!.longitude), 18);
+            });
     }
   }
 
@@ -68,9 +35,9 @@ class HomepageState extends State<Homepage> {
         title: const Text("Attendence"),
         centerTitle: true,
       ),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
-          _initializeLocation();
+          _getLocation();
           setState(() {
             if (i == "Punch in") {
               i = "Punch out";
@@ -79,13 +46,11 @@ class HomepageState extends State<Homepage> {
             }
           });
         },
-        child: Text(i),
+        label: Text(i),
       ),
       drawer: const CommonDrawer(),
       body: position == null
-          ? Text(_locationMessage.isEmpty
-              ? "Fetching location..."
-              : _locationMessage)
+          ? const Center(child:Text("Tap the button below to get position"))
           : FlutterMap(
               mapController: _mapcontroller,
               options: MapOptions(
@@ -112,4 +77,3 @@ class HomepageState extends State<Homepage> {
     );
   }
 }
-

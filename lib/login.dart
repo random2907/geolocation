@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'home.dart';
+import 'permission.dart';
 
 class Login extends StatefulWidget {
   const Login({super.key});
@@ -22,7 +22,7 @@ class LoginState extends State<Login> {
         email: emailAddress.text,
         password: password.text,
       );
-      _navigateToHome();
+      _navigateToPermission();
     } on FirebaseAuthException catch (e) {
       setState(() {
         if (e.code == 'user-not-found') {
@@ -56,17 +56,18 @@ class LoginState extends State<Login> {
     }
   }
 
-  void _navigateToHome() {
+  void _navigateToPermission() {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => const Homepage()),
+        MaterialPageRoute(builder: (context) => const Permission()),
       );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Column(children: <Widget>[
+      body: SingleChildScrollView(
+      child: Column(children: <Widget>[
         Padding(
           padding: const EdgeInsets.only(top: 50, left: 18, right: 18),
           child: TextField(
@@ -88,32 +89,24 @@ class LoginState extends State<Login> {
           ),
         ),
         SizedBox(
-          height: 25,
+          height: 50,
+          child: Center(
           child: _errorMessage != null ? Text(_errorMessage!) : null,
+          ),
         ),
         Padding(
-          padding: const EdgeInsets.all(0.0),
+          padding: const EdgeInsets.all(1.0),
           child: ElevatedButton(
             onPressed: () {
               setState(() {
                 _signin();
               });
             },
-            child: const Text("Sign in"),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.all(0.0),
-          child: ElevatedButton(
-            onPressed: () {
-              setState(() {
-                _signup();
-              });
-            },
-            child: const Text("Sign up"),
+            child: const Text("LOGIN", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
           ),
         ),
       ]),
+      ),
     );
   }
 }
