@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
-import 'common_drawer.dart';
 import 'home.dart';
 
 class Permission extends StatefulWidget {
@@ -50,7 +49,6 @@ class PermissionState extends State<Permission> {
         title: const Text("Permission"),
         centerTitle: true,
       ),
-      drawer: const CommonDrawer(),
       body: Center(
       child:ElevatedButton(
         child: Text(gpsStatus),
