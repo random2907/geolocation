@@ -22,6 +22,13 @@ class MyappState extends State<Myapp> {
   bool isUser = false;
   bool isPermission = false;
   bool? permission;
+  bool isInitilize = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _permission();
+  }
 
   Future<void> _permission() async {
     LocationPermission permission = await Geolocator.checkPermission();
@@ -34,17 +41,16 @@ class MyappState extends State<Myapp> {
     } else {
       isPermission = true;
     }
-    setState((){});
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _permission();
+    setState(() {
+      isInitilize = true;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
+          if (!isInitilize){
+                  return const Center(child: CircularProgressIndicator());
+          }
     return MaterialApp(
       title: "Hello world",
       theme: ThemeData(

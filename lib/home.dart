@@ -39,11 +39,8 @@ class HomepageState extends State<Homepage> {
         onPressed: () {
           _getLocation();
           setState(() {
-            if (i == "Punch in") {
-              i = "Punch out";
-            } else {
-              i = "Punch in";
-            }
+                  print("You $i");
+                  i=="Punch in"?i="Punch out":i="Punch in";
           });
         },
         label: Text(i),
