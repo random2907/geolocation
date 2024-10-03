@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'home.dart';
 import 'login.dart';
+import 'user_profile.dart';
 
 class CommonDrawer extends StatelessWidget {
   const CommonDrawer({super.key});
@@ -23,6 +24,13 @@ class CommonDrawer extends StatelessWidget {
             onTap: () {
               Navigator.pushReplacement(context,
                   MaterialPageRoute(builder: (context) => const Homepage()));
+            },
+          ),
+          ListTile(
+            title: const Text("Profile"),
+            onTap: () {
+              Navigator.pushReplacement(context,
+                  MaterialPageRoute(builder: (context) => const UserProfile()));
             },
           ),
           ListTile(
