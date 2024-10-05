@@ -1,17 +1,27 @@
-run-name: ${{ github.actor }} is testing out GitHub Actions 🚀
+name: ${{ github.actor }} is testing out GitHub Actions 🚀
+
 on: [push]
+
 jobs:
   Explore-GitHub-Actions:
     runs-on: ubuntu-latest
+
     steps:
       - name: Check out repository code
         uses: actions/checkout@v4
+
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          channel: stable
-          flutter-version-file: pubspec.yaml
-      - run: flutter pub get
-      - run: flutter build apk --release
-      - run: echo "🍏 This job's status is ${{ job.status }}."
+          channel: stable  # Specifies stable Flutter channel
+          flutter-version: latest  # Use latest stable Flutter version or specify one
+
+      - name: Install Flutter dependencies
+        run: flutter pub get
+
+      - name: Build APK (release)
+        run: flutter build apk --release
+
+      - name: Display job status
+        run: echo "🍏 This job's status is ${{ job.status }}."
 
